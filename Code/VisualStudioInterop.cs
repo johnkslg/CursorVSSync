@@ -135,7 +135,7 @@ namespace CursorSync
         static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable rot);
 
         [DllImport("ole32.dll")]
-        static extern int CreateBindCtx(int reserved, out IBindCtx bindCtx);
+        static extern int CreateBindCtx(int reserved, out  IBindCtx bindCtx);
 
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
@@ -165,7 +165,8 @@ namespace CursorSync
 
         static string FindFileInSolution(DTE2 dte, string fileName)
         {
-            // Search all projects and project items
+            // Search all projects and project items 
+			if (dte.Solution.Projects == null) return null;
             foreach (EnvDTE.Project proj in dte.Solution.Projects)
             {
                 var path = FindFileInProject(proj, fileName);
@@ -177,6 +178,9 @@ namespace CursorSync
         static string FindFileInProject(EnvDTE.Project project, string fileName)
         {
             // Recursively search project items
+			if (project.ProjectItems == null) return null;
+			
+            //Console.WriteLine($"Checking project: {project.Name} {project.ProjectItems.Count} items");
             foreach (EnvDTE.ProjectItem item in project.ProjectItems)
             {
                 var path = FindFileInProjectItem(item, fileName);
@@ -193,11 +197,16 @@ namespace CursorSync
                     return item.FileNames[i];
 
             // Recurse into subitems
-            foreach (EnvDTE.ProjectItem sub in item.ProjectItems)
+			if (item.ProjectItems != null)
             {
-                var path = FindFileInProjectItem(sub, fileName);
-                if (path != null) return path;
-            }
+				//if (item.ProjectItems.Count > 0)
+				//	Console.WriteLine($"Recursing into {item.ProjectItems.Count} subitems");
+				foreach (EnvDTE.ProjectItem sub in item.ProjectItems)
+				{
+					var path = FindFileInProjectItem(sub, fileName);
+					if (path != null) return path;
+				} 
+            } 
             return null;
         }
     }

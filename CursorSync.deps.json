@@ -1,0 +1,59 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "CursorSync/1.0.0": {
+        "dependencies": {
+          "envdte80": "17.9.37000"
+        },
+        "runtime": {
+          "CursorSync.dll": {}
+        }
+      },
+      "envdte80/17.9.37000": {
+        "dependencies": {
+          "Microsoft.VisualStudio.Interop": "17.9.37000"
+        },
+        "runtime": {
+          "lib/net6.0/envdte80.dll": {
+            "assemblyVersion": "17.0.0.0",
+            "fileVersion": "17.9.37000.1723"
+          }
+        }
+      },
+      "Microsoft.VisualStudio.Interop/17.9.37000": {
+        "runtime": {
+          "lib/net6.0/Microsoft.VisualStudio.Interop.dll": {
+            "assemblyVersion": "17.0.0.0",
+            "fileVersion": "17.9.37000.1723"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CursorSync/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "envdte80/17.9.37000": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-YzSZuT4yw1qLaafWfWZSuQFiDXDfzlmj947Pk/bEIZTuS+C0UA9mn1LYMZi4y+nU8g0bufNFm6MCZq/jiCw9sw==",
+      "path": "envdte80/17.9.37000",
+      "hashPath": "envdte80.17.9.37000.nupkg.sha512"
+    },
+    "Microsoft.VisualStudio.Interop/17.9.37000": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-lIHdpk2g0PpIy2PiYCf6TFXZmS0tHC3shGhTrh1knmQ6M/BpYnuKmdJ5Ysknfm+MVEDUg+uYTcvaLqhF6C+O7w==",
+      "path": "microsoft.visualstudio.interop/17.9.37000",
+      "hashPath": "microsoft.visualstudio.interop.17.9.37000.nupkg.sha512"
+    }
+  }
+}
