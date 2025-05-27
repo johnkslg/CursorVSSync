@@ -26,7 +26,7 @@ namespace CursorSync
             return (false, null);
         }
 
-        public static (int processId, string documentPath, string solutionFolder)? GetVisualStudioDocumentPath(int processId)
+        public static (int processId, string documentPath, string solutionFolder, int? lineNumber)? GetVisualStudioDocumentPath(int processId)
         {
             var processIdToDteMap = GetVisualStudioDTEs();
             if (processIdToDteMap.TryGetValue(processId, out var dte) && dte != null)
@@ -36,18 +36,26 @@ namespace CursorSync
                     var doc = dte.ActiveDocument;
                     string documentPath = null;
                     string solutionFolder = null;
+                    int? lineNumber = null;
+
                     if (doc != null && !string.IsNullOrEmpty(doc.FullName))
+                    {
                         documentPath = doc.FullName;
+
+                        // Try to get the current line number
+                        if (doc.Selection is EnvDTE.TextSelection sel)
+                            lineNumber = sel.ActivePoint.Line;
+                    }
 
                     var solutionPath = dte.Solution?.FullName;
                     if (!string.IsNullOrEmpty(solutionPath))
                         solutionFolder = Path.GetDirectoryName(solutionPath);
 
-                    return (processId, documentPath, solutionFolder);
+                    return (processId, documentPath, solutionFolder, lineNumber);
                 }
                 catch { }
             }
-            return (processId, null, null);
+            return (processId, null, null, null);
         }
         
         static Dictionary<int, DTE2> GetVisualStudioDTEs()

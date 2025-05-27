@@ -61,13 +61,18 @@ namespace CursorSync
         }
 
         // Opens the given file in Cursor with specified working folder
-        public static int? OpenFileInCursor(string filePath, string workingFolder)
+        public static int? OpenFileInCursor(string filePath, string workingFolder, int? lineNumber = null)
         {
             try
             {
-                // Use format: cursor --reuse-window path/to/folder path/to/folder/file.cs
-                var args = $"--reuse-window \"{workingFolder}\" \"{filePath}\"";
-                
+                // Build the --goto argument if a line number is provided
+                var gotoArg = lineNumber.HasValue
+                    ? $"--goto \"{filePath}:{lineNumber.Value}\""
+                    : $"\"{filePath}\"";
+
+                // Use format: cursor --reuse-window "workingFolder" --goto "filePath:line"
+                var args = $"--reuse-window \"{workingFolder}\" {gotoArg}";
+
                 var psi = new ProcessStartInfo("cursor", args)
                 {
                     UseShellExecute = true,

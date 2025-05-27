@@ -33,7 +33,7 @@ namespace CursorSync
                     var r = VisualStudioInterop.GetVisualStudioDocumentPath(processId.Value);
                     if (r.HasValue)
                     {
-                        var curId = CursorInterop.OpenFileInCursor(r.Value.documentPath, r.Value.solutionFolder);
+                        var curId = CursorInterop.OpenFileInCursor(r.Value.documentPath, r.Value.solutionFolder, r.Value.lineNumber);
                         if (curId.HasValue)
                             Utils.ActivateWindow(curId.Value);
                         else
