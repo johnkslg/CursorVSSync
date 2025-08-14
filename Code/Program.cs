@@ -25,10 +25,11 @@ namespace CursorSync
                 var testMode = args != null && Array.Exists(args, a => a.Equals("--test", StringComparison.OrdinalIgnoreCase));
                 var handled = false; // track if we handled a case
 
+                // If test mode, allocate console immediately for diagnostics
+                if (testMode && !HasConsole()) AllocConsole();
+
                 if (VisualStudioInterop.IsVisualStudioActive() is (true, var processId))
                 {
-                    if (testMode && !HasConsole()) AllocConsole();
-
                     if (testMode) Console.WriteLine("Visual Studio is active");
                     var r = VisualStudioInterop.GetVisualStudioDocumentPath(processId.Value);
                     if (r.HasValue)
@@ -48,8 +49,6 @@ namespace CursorSync
                 }
                 else if (CursorInterop.IsCursorActive() is (true, var cursorProcessId))
                 {
-                    if (testMode && !HasConsole()) AllocConsole();
- 
                     if (testMode) Console.WriteLine("Cursor is active");
                     var r2 = CursorInterop.GetCursorTabName(cursorProcessId.Value); 
                     if (!string.IsNullOrEmpty(r2))
@@ -63,9 +62,15 @@ namespace CursorSync
                     }
                 }
 
-                // If neither VS nor Cursor was active, show a message box
+                // If neither VS nor Cursor was active, show a message box and print diagnostics in test mode
                 if (!handled)
+                {
+                    if (testMode)
+                    {
+                        PrintForegroundWindowDiagnostics();
+                    }
                     MessageBox.Show("Could not find an active Visual Studio or Cursor instance.", "CursorSync", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
 
                 if (testMode)
                 {
@@ -86,5 +91,50 @@ namespace CursorSync
 
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
+
+        static void PrintForegroundWindowDiagnostics()
+        {
+            try
+            {
+                var hwnd = GetForegroundWindowDI();
+                Console.WriteLine($"Foreground HWND: 0x{hwnd.ToInt64():X}");
+                if (hwnd != IntPtr.Zero)
+                {
+                    GetWindowThreadProcessIdDI(hwnd, out uint pid);
+                    Console.WriteLine($"Foreground PID: {pid}");
+                    try
+                    {
+                        var proc = System.Diagnostics.Process.GetProcessById((int)pid);
+                        Console.WriteLine($"Foreground Process: {proc.ProcessName}");
+                    }
+                    catch { }
+
+                    var len = GetWindowTextLengthDI(hwnd);
+                    if (len > 0)
+                    {
+                        var sb = new System.Text.StringBuilder(len + 1);
+                        GetWindowTextDI(hwnd, sb, sb.Capacity);
+                        Console.WriteLine($"Foreground Title: {sb}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Diagnostics failed: {ex.Message}");
+            }
+        }
+
+        // Diagnostics-only P/Invoke wrappers (DI suffix) to avoid cross-class visibility issues
+        [DllImport("user32.dll", EntryPoint = "GetForegroundWindow")]
+        static extern IntPtr GetForegroundWindowDI();
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowThreadProcessId")]
+        static extern uint GetWindowThreadProcessIdDI(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowTextLengthW", CharSet = CharSet.Unicode)]
+        static extern int GetWindowTextLengthDI(IntPtr hWnd);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowTextW", CharSet = CharSet.Unicode)]
+        static extern int GetWindowTextDI(IntPtr hWnd, System.Text.StringBuilder lpString, int nMaxCount);
     }
 }

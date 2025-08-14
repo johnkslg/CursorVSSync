@@ -92,18 +92,32 @@ namespace CursorSync
         // Returns true and the process id if VS Code is the active window, otherwise false and null
         public static (bool isActive, int? processId) IsCursorActive()
         {
-            // Get the foreground window
             var hwnd = GetForegroundWindow();
             if (hwnd == IntPtr.Zero) return (false, null);
 
-            // Get the process id for the window
             GetWindowThreadProcessId(hwnd, out uint pid);
             var processId = (int)pid;
 
-            // Get the process name
-            var process = Process.GetProcessById(processId);
-            if (string.Equals(process.ProcessName, "Cursor", StringComparison.OrdinalIgnoreCase))
-                return (true, processId);
+            try
+            {
+                var process = Process.GetProcessById(processId);
+                // Accept both Cursor and Code (just in case)
+                if (string.Equals(process.ProcessName, "Cursor", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(process.ProcessName, "Code", StringComparison.OrdinalIgnoreCase))
+                    return (true, processId);
+            }
+            catch { }
+
+            // Fallback to window title check in case of packaging changes
+            var length = GetWindowTextLength(hwnd);
+            if (length > 0)
+            {
+                var sb = new StringBuilder(length + 1);
+                GetWindowText(hwnd, sb, sb.Capacity);
+                var title = sb.ToString();
+                if (!string.IsNullOrEmpty(title) && title.IndexOf("Cursor", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return (true, processId);
+            }
 
             return (false, null);
         }

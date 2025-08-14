@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.ComTypes;
 using EnvDTE80;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace CursorSync
 {
@@ -19,8 +20,18 @@ namespace CursorSync
             GetWindowThreadProcessId(hwnd, out uint pid);
             var processId = (int)pid;
 
-            var process = System.Diagnostics.Process.GetProcessById(processId);
-            if (string.Equals(process.ProcessName, "devenv", StringComparison.OrdinalIgnoreCase))
+            // Check process name first
+            try
+            {
+                var process = System.Diagnostics.Process.GetProcessById(processId);
+                if (string.Equals(process.ProcessName, "devenv", StringComparison.OrdinalIgnoreCase))
+                    return (true, processId);
+            }
+            catch { }
+
+            // Fallback: check window title to be resilient to future changes
+            var title = GetWindowTitle(hwnd);
+            if (!string.IsNullOrEmpty(title) && title.IndexOf("Visual Studio", StringComparison.OrdinalIgnoreCase) >= 0)
                 return (true, processId);
 
             return (false, null);
@@ -150,6 +161,21 @@ namespace CursorSync
 
         [DllImport("user32.dll")]
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowTextLength(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        static string GetWindowTitle(IntPtr hWnd)
+        {
+            int length = GetWindowTextLength(hWnd);
+            if (length <= 0) return null;
+            var sb = new StringBuilder(length + 1);
+            GetWindowText(hWnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
 
         internal static int? OpenFileInVisualStudio(string fileName)
         {
